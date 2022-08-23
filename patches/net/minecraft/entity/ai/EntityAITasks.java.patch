@@ -6,8 +6,8 @@
      private static final Logger LOGGER = LogManager.getLogger();
 -    public final Set<EntityAITasks.EntityAITaskEntry> taskEntries = Sets.<EntityAITasks.EntityAITaskEntry>newLinkedHashSet();
 -    private final Set<EntityAITasks.EntityAITaskEntry> executingTaskEntries = Sets.<EntityAITasks.EntityAITaskEntry>newLinkedHashSet();
-+    public final Set<EntityAITaskEntry> taskEntries = Sets.<EntityAITaskEntry>newLinkedHashSet();
-+    private final Set<EntityAITaskEntry> executingTaskEntries = Sets.<EntityAITaskEntry>newLinkedHashSet();
++    public final Set<EntityAITaskEntry> taskEntries = Sets.<EntityAITaskEntry>newConcurrentHashSet();
++    private final Set<EntityAITaskEntry> executingTaskEntries = Sets.<EntityAITaskEntry>newConcurrentHashSet();
      private final Profiler profiler;
      private int tickCount;
      private int tickRate = 3;
