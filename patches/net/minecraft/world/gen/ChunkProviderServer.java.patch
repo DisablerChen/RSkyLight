@@ -1,6 +1,17 @@
 --- ../src-base/minecraft/net/minecraft/world/gen/ChunkProviderServer.java
 +++ ../src-work/minecraft/net/minecraft/world/gen/ChunkProviderServer.java
-@@ -26,15 +26,18 @@
+@@ -10,6 +10,10 @@
+ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Set;
++import java.util.concurrent.CountDownLatch;
++import java.util.concurrent.ForkJoinPool;
++import java.util.concurrent.atomic.AtomicBoolean;
++import java.util.concurrent.atomic.AtomicInteger;
+ import javax.annotation.Nullable;
+ import net.minecraft.crash.CrashReport;
+ import net.minecraft.crash.CrashReportCategory;
+@@ -26,15 +30,18 @@
  import net.minecraft.world.chunk.storage.IChunkLoader;
  import org.apache.logging.log4j.LogManager;
  import org.apache.logging.log4j.Logger;
@@ -20,7 +31,7 @@
  
      public ChunkProviderServer(WorldServer worldObjIn, IChunkLoader chunkLoaderIn, IChunkGenerator chunkGeneratorIn)
      {
-@@ -82,23 +85,56 @@
+@@ -82,23 +89,56 @@
          return chunk;
      }
  
@@ -82,7 +93,7 @@
          return chunk;
      }
  
-@@ -108,6 +144,7 @@
+@@ -108,6 +148,7 @@
  
          if (chunk == null)
          {
@@ -90,7 +101,7 @@
              long i = ChunkPos.asLong(x, z);
  
              try
-@@ -126,7 +163,8 @@
+@@ -126,7 +167,8 @@
  
              this.id2ChunkMap.put(i, chunk);
              chunk.onLoad();
@@ -100,35 +111,70 @@
          }
  
          return chunk;
-@@ -188,23 +226,17 @@
-         int i = 0;
+@@ -183,34 +225,41 @@
+         }
+     }
+ 
++    private static final ForkJoinPool SAVING_POOL = new ForkJoinPool();
++
+     public boolean saveChunks(boolean all)
+     {
+-        int i = 0;
++        AtomicInteger i = new AtomicInteger();
          List<Chunk> list = Lists.newArrayList(this.id2ChunkMap.values());
++        final CountDownLatch latch = new CountDownLatch(list.size());
  
 -        for (int j = 0; j < list.size(); ++j)
 -        {
 -            Chunk chunk = list.get(j);
--
++        final AtomicBoolean shouldContinue = new AtomicBoolean(true);
+ 
 -            if (all)
 -            {
-+        for (Chunk chunk : list) {
-+            if (all) {
-                 this.saveChunkExtraData(chunk);
-             }
- 
+-                this.saveChunkExtraData(chunk);
+-            }
+-
 -            if (chunk.needsSaving(all))
 -            {
-+            if (chunk.needsSaving(all)) {
-                 this.saveChunkData(chunk);
-                 chunk.setModified(false);
-                 ++i;
- 
+-                this.saveChunkData(chunk);
+-                chunk.setModified(false);
+-                ++i;
+-
 -                if (i == 24 && !all)
 -                {
-+                if (i == 24 && !all) {
-                     return false;
+-                    return false;
++        for (Chunk chunk : list) {
++            SAVING_POOL.execute(()->{
++                try {
++                    if (all && shouldContinue.get()) {
++                        this.saveChunkExtraData(chunk);
++                    }
++                    if (chunk.needsSaving(all) && shouldContinue.get()) {
++                        this.saveChunkData(chunk);
++                        chunk.setModified(false);
++                        i.incrementAndGet();
++                        if (i.get() == 24 && !all) {
++                            shouldContinue.set(false);
++                        }
++                    }
++                }finally {
++                    latch.countDown();
                  }
-             }
-@@ -218,36 +250,91 @@
+-            }
++            });
+         }
+-
+-        return true;
++        try {
++            latch.await();
++        } catch (InterruptedException e) {
++            throw new RuntimeException(e);
++        }
++        return shouldContinue.get();
+     }
+ 
+     public void flushToDisk()
+@@ -218,36 +267,91 @@
          this.chunkLoader.flush();
      }
  

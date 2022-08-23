@@ -18,16 +18,28 @@
      private long timeoutTimer;
      private long lastTimeoutCheck;
      private double timeoutLimit;
-@@ -68,8 +68,10 @@
+@@ -68,8 +68,9 @@
          {
              if (this.targetPos != null)
              {
 -                this.currentPath = null;
 -                this.currentPath = this.getPathToPos(this.targetPos);
 +                synchronized (this){
-+                    this.currentPath = null;
 +                    this.currentPath = this.getPathToPos(this.targetPos);
 +                }
                  this.lastTimeUpdated = this.world.getTotalWorldTime();
                  this.tryUpdatePath = false;
              }
+@@ -101,12 +102,10 @@
+         {
+             this.targetPos = pos;
+             float f = this.getPathSearchRange();
+-            this.world.profiler.startSection("pathfind");
+             BlockPos blockpos = new BlockPos(this.entity);
+             int i = (int)(f + 8.0F);
+             ChunkCache chunkcache = new ChunkCache(this.world, blockpos.add(-i, -i, -i), blockpos.add(i, i, i), 0);
+             Path path = this.pathFinder.findPath(chunkcache, this.entity, this.targetPos, f);
+-            this.world.profiler.endSection();
+             return path;
+         }
+     }
