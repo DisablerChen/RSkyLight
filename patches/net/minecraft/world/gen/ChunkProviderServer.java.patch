@@ -100,7 +100,35 @@
          }
  
          return chunk;
-@@ -218,36 +256,91 @@
+@@ -188,23 +226,17 @@
+         int i = 0;
+         List<Chunk> list = Lists.newArrayList(this.id2ChunkMap.values());
+ 
+-        for (int j = 0; j < list.size(); ++j)
+-        {
+-            Chunk chunk = list.get(j);
+-
+-            if (all)
+-            {
++        for (Chunk chunk : list) {
++            if (all) {
+                 this.saveChunkExtraData(chunk);
+             }
+ 
+-            if (chunk.needsSaving(all))
+-            {
++            if (chunk.needsSaving(all)) {
+                 this.saveChunkData(chunk);
+                 chunk.setModified(false);
+                 ++i;
+ 
+-                if (i == 24 && !all)
+-                {
++                if (i == 24 && !all) {
+                     return false;
+                 }
+             }
+@@ -218,36 +250,91 @@
          this.chunkLoader.flush();
      }
  

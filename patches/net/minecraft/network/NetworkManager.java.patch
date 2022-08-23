@@ -279,7 +279,7 @@
                          channelfuture1.addListeners(futureListeners);
                      }
  
-@@ -250,89 +214,73 @@
+@@ -250,89 +214,76 @@
          }
      }
  
@@ -296,19 +296,21 @@
 -                {
 -                    NetworkManager.InboundHandlerTuplePacketListener networkmanager$inboundhandlertuplepacketlistener = this.outboundPacketsQueue.poll();
 -                    this.dispatchPacket(networkmanager$inboundhandlertuplepacketlistener.packet, networkmanager$inboundhandlertuplepacketlistener.futureListeners);
--                }
--            }
--            finally
--            {
 +    private void flushOutboundQueue() {
 +        if (this.channel != null && this.channel.isOpen()) {
 +            this.readWriteLock.readLock().lock();
 +            try {
-+                //Concurring packet flushing
-+                flushingPool.submit(()->this.outboundPacketsQueue.parallelStream().forEach(ihtpl->{
-+                    this.outboundPacketsQueue.remove(ihtpl);
-+                    this.dispatchPacket(ihtpl.packet,ihtpl.futureListeners);
-+                })).join();
++                while (true){
++                    InboundHandlerTuplePacketListener ihtpl = this.outboundPacketsQueue.poll();
++                    if (ihtpl!=null){
++                        this.dispatchPacket(ihtpl.packet,ihtpl.futureListeners);
++                    }else{
++                        break;
++                    }
+                 }
+-            }
+-            finally
+-            {
 +            } finally {
                  this.readWriteLock.readLock().unlock();
              }
@@ -402,7 +404,7 @@
                      ;
                  }
  
-@@ -343,126 +291,105 @@
+@@ -343,126 +294,105 @@
      }
  
      @SideOnly(Side.CLIENT)

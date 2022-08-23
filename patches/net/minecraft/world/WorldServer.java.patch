@@ -820,26 +820,23 @@
              if (progressCallback != null)
              {
                  progressCallback.displaySavingString("Saving level");
-@@ -979,14 +1189,17 @@
+@@ -979,14 +1189,7 @@
              }
  
              chunkproviderserver.saveChunks(all);
-+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.WorldEvent.Save(this));
- 
-+            /* //Paper start - disable vanilla chunk GC
-             for (Chunk chunk : Lists.newArrayList(chunkproviderserver.getLoadedChunks()))
-             {
-                 if (chunk != null && !this.playerChunkMap.contains(chunk.x, chunk.z))
-                 {
-                     chunkproviderserver.queueUnload(chunk);
-                 }
+-
+-            for (Chunk chunk : Lists.newArrayList(chunkproviderserver.getLoadedChunks()))
+-            {
+-                if (chunk != null && !this.playerChunkMap.contains(chunk.x, chunk.z))
+-                {
+-                    chunkproviderserver.queueUnload(chunk);
+-                }
 -            }
-+            }*/
-+            // Paper end
++            net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.WorldEvent.Save(this));
          }
      }
  
-@@ -1012,6 +1225,12 @@
+@@ -1012,6 +1215,12 @@
              }
          }
  
@@ -852,7 +849,7 @@
          this.worldInfo.setBorderSize(this.getWorldBorder().getDiameter());
          this.worldInfo.getBorderCenterX(this.getWorldBorder().getCenterX());
          this.worldInfo.getBorderCenterZ(this.getWorldBorder().getCenterZ());
-@@ -1023,18 +1242,20 @@
+@@ -1023,18 +1232,20 @@
          this.worldInfo.setBorderLerpTime(this.getWorldBorder().getTimeUntilTarget());
          this.saveHandler.saveWorldInfoWithPlayer(this.worldInfo, this.mcServer.getPlayerList().getHostPlayerData());
          this.mapStorage.saveAllData();
@@ -877,7 +874,7 @@
              {
                  this.loadedEntityList.add(entity);
                  this.onEntityAdded(entity);
-@@ -1046,7 +1267,7 @@
+@@ -1046,7 +1257,7 @@
      {
          if (entityIn.isDead)
          {
@@ -886,7 +883,7 @@
              return false;
          }
          else
-@@ -1065,7 +1286,7 @@
+@@ -1065,7 +1276,7 @@
                  {
                      if (!(entityIn instanceof EntityPlayer))
                      {
@@ -895,7 +892,7 @@
                          return false;
                      }
  
-@@ -1113,9 +1334,18 @@
+@@ -1113,9 +1324,18 @@
  
      public boolean addWeatherEffect(Entity entityIn)
      {
@@ -915,7 +912,7 @@
              return true;
          }
          else
-@@ -1136,10 +1366,18 @@
+@@ -1136,10 +1356,18 @@
  
      public Explosion newExplosion(@Nullable Entity entityIn, double x, double y, double z, float strength, boolean isFlaming, boolean isSmoking)
      {
@@ -935,7 +932,7 @@
          if (!isSmoking)
          {
              explosion.clearAffectedBlockPositions();
-@@ -1182,7 +1420,8 @@
+@@ -1182,7 +1410,8 @@
              {
                  if (this.fireBlockEvent(blockeventdata))
                  {
@@ -945,7 +942,7 @@
                  }
              }
  
-@@ -1208,27 +1447,31 @@
+@@ -1208,27 +1437,31 @@
  
          if (this.prevRainingStrength != this.rainingStrength)
          {
@@ -983,7 +980,7 @@
          }
      }
  
-@@ -1265,11 +1508,18 @@
+@@ -1265,11 +1498,18 @@
  
      public void spawnParticle(EnumParticleTypes particleType, boolean longDistance, double xCoord, double yCoord, double zCoord, int numberOfParticles, double xOffset, double yOffset, double zOffset, double particleSpeed, int... particleArguments)
      {
@@ -1002,7 +999,7 @@
              this.sendPacketWithinDistance(entityplayermp, longDistance, xCoord, yCoord, zCoord, spacketparticles);
          }
      }
-@@ -1323,7 +1573,12 @@
+@@ -1323,7 +1563,12 @@
          return this.functionManager;
      }
  
